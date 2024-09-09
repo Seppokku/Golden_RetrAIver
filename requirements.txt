@@ -1,0 +1,14 @@
+langchain
+langchain-community
+numpy
+pandas
+python-dotenv
+sentence-transformers
+streamlit
+torch
+anthropic
+youtube-transcript-api
+streamlit
+google-api-python-client
+faiss-cpu
+Pillow

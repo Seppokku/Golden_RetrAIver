@@ -1,1 +1,1 @@
-# Golden_RetrAIver
+# RAG_and_SUMMARIZER
