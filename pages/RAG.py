@@ -77,20 +77,20 @@ def format_answer(answer):
     # Если есть код, обрабатываем его
     if code_blocks:
         for block in code_blocks:
-            # Определяем тип кода (например, bash или python)
-            if block.strip().startswith('bash'):
-                answer = answer.replace(f'```{block}```', f'<pre><code class="language-bash">{block}</code></pre>')
-            else:
-                answer = answer.replace(f'```{block}```', f'<pre><code class="language-python">{block}</code></pre>')
-    else:
-        # Если нет явных блоков, просто показываем текст
-        answer = f'<p>{answer}</p>'
+            answer = answer.replace(f'```{block}```', f'<pre><code>{block}</code></pre>')
+    
+    # Оформляем текст без изменений, кроме кодовых блоков
+    return answer
 
-    # Оформляем ответ в рамку
+# Функция для красивого оформления рамки
+def display_answer(answer):
+    formatted_answer = format_answer(answer)
+    
+    # Обрамляем ответ в HTML блок с красивой рамкой
     st.markdown(
         f'''
         <div style="background-color:#f9f9f9; padding: 20px; border-radius: 10px; border: 2px solid #d3d3d3; word-wrap: break-word;">
-            {answer}
+            {formatted_answer}
         </div>
         ''',
         unsafe_allow_html=True
@@ -115,8 +115,8 @@ if st.button("🚀 Поиск и генерация ответа"):
             # Оформление ответа
             st.subheader("✉️ Ответ:")
 
-            # Форматируем и выводим ответ
-            format_answer(answer)
+            # Выводим ответ с красивым оформлением
+            display_answer(answer)
 
         else:
             st.warning("⚠️ Не удалось получить ответ от модели.")
@@ -135,6 +135,7 @@ pre {
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 
