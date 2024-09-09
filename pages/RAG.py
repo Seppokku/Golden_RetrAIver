@@ -71,30 +71,21 @@ def answer_question(question, retriever, client):
 
 # Функция для форматирования ответа с кодом и текста
 def format_answer(answer):
-    # Регулярное выражение для поиска фрагментов кода
-    code_blocks = re.findall(r'```(.*?)```', answer, re.DOTALL)
-    
-    # Если есть код, обрабатываем его
-    if code_blocks:
-        for block in code_blocks:
-            answer = answer.replace(f'```{block}```', f'<pre><code>{block}</code></pre>')
-    
-    # Оформляем текст без изменений, кроме кодовых блоков
-    return answer
+    # Разделим ответ на текстовые и кодовые блоки с помощью регулярных выражений
+    parts = re.split(r'(```.*?```)', answer, flags=re.DOTALL)
 
-# Функция для красивого оформления рамки
-def display_answer(answer):
-    formatted_answer = format_answer(answer)
-    
-    # Обрамляем ответ в HTML блок с красивой рамкой
-    st.markdown(
-        f'''
-        <div style="background-color:#f9f9f9; padding: 20px; border-radius: 10px; border: 2px solid #d3d3d3; word-wrap: break-word;">
-            {formatted_answer}
-        </div>
-        ''',
-        unsafe_allow_html=True
-    )
+    for part in parts:
+        if part.startswith('```') and part.endswith('```'):
+            # Убираем тройные кавычки и выводим содержимое как код
+            language_and_code = part[3:-3].strip().split("\n", 1)
+            if len(language_and_code) == 2:
+                language, code = language_and_code
+                st.code(code, language=language)
+            else:
+                st.code(language_and_code[0])
+        else:
+            # Обычный текст
+            st.markdown(part)
 
 st.set_page_config(page_title="ML Knowledge Base Search 🧑‍💻", page_icon="🤖")
 
@@ -115,26 +106,14 @@ if st.button("🚀 Поиск и генерация ответа"):
             # Оформление ответа
             st.subheader("✉️ Ответ:")
 
-            # Выводим ответ с красивым оформлением
-            display_answer(answer)
+            # Отображаем ответ с форматированием
+            format_answer(answer)
 
         else:
             st.warning("⚠️ Не удалось получить ответ от модели.")
     else:
         st.warning("⚠️ Пожалуйста, введите запрос.")
 
-# Дополнительный стиль для корректного отображения кода
-st.markdown("""
-<style>
-pre {
-    background-color: #f5f5f5;
-    padding: 10px;
-    border-radius: 8px;
-    border: 1px solid #dcdcdc;
-    overflow-x: auto;
-}
-</style>
-""", unsafe_allow_html=True)
 
 
 
