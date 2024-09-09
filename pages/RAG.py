@@ -6,7 +6,6 @@ import anthropic
 import os
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 claude_api_key = os.getenv("CLAUDE_API_KEY")
@@ -54,44 +53,75 @@ def call_claude_api(prompt, client):
 
 # Функция для генерации ответа на вопрос пользователя
 def answer_question(question, retriever, client):
-    # Получение релевантных документов из базы знаний
-    documents = retriever.get_relevant_documents(question)
-    context = " ".join([doc.page_content for doc in documents])
+    # Этап 1: Поиск релевантных документов
+    with st.spinner('🔍 Ищем совпадения по вашему вопросу...'):
+        documents = retriever.get_relevant_documents(question)
 
-    # Формирование запроса к модели
-    prompt = prompt_template.format(context=context, input=question)
+    # Этап 2: Формирование контекста
+    with st.spinner('🧠 Формируем контекст для ответа...'):
+        context = " ".join([doc.page_content for doc in documents])
 
-    # Вызов API модели Claude
-    answer = call_claude_api(prompt, client)
+    # Этап 3: Генерация ответа
+    with st.spinner('💬 Формулируем ответ...'):
+        prompt = prompt_template.format(context=context, input=question)
+        answer = call_claude_api(prompt, client)
+    
     return answer, documents
 
+# Настройка стиля ответа
+def format_answer(answer):
+    st.markdown(
+        f'<div style="background-color:#f0f2f6; padding: 20px; border-radius: 10px; border: 1px solid #dcdcdc;">'
+        f'<p style="font-size:16px;">{st.markdown(answer)}</p>'
+        f'</div>',
+        unsafe_allow_html=True
+    )
 
-st.title("Поиск по базе знаний RAG с моделью Claude")
+st.set_page_config(page_title="ML Knowledge Base Search 🧑‍💻", page_icon="🤖")
 
-st.write("Используйте базу знаний для поиска информации и генерации ответов.")
+st.title("🔍 Поиск по базе знаний RAG с моделью Claude 🤖")
+
+st.write("Используйте базу знаний для поиска информации и генерации ответов на вопросы по машинному обучению 📚.")
 
 # Поле для ввода запроса пользователя
-query = st.text_input("Введите ваш запрос:", 'Что такое машинное обучение?')
+query = st.text_input("📝 Введите ваш запрос:", 'Что такое машинное обучение?')
 
-if st.button("Поиск и генерация ответа"):
+# Кнопка для запуска поиска и генерации ответа
+if st.button("🚀 Поиск и генерация ответа"):
     if query:
 
         # Генерация ответа на вопрос
         answer, documents = answer_question(query, embedding_retriever, client)
 
         if answer:
-            # Отображение ответа
-            st.text_area("Ответ:", answer, height=600)
+            # Оформление ответа
+            st.subheader("✉️ Ответ:")
+            
+            # Проверяем, есть ли фрагменты кода
+            if '```' in answer:
+                st.markdown(answer)
+            else:
+                format_answer(answer)
 
-            # # Отображение контекста (фрагменты из базы знаний)
-            # st.subheader('Контекст')
-            # for i, doc in enumerate(documents):
-            #     st.subheader(f'Фрагмент {i+1}')
-            #     st.write(doc.page_content)
         else:
-            st.warning("Не удалось получить ответ от модели.")
+            st.warning("⚠️ Не удалось получить ответ от модели.")
     else:
-        st.warning("Пожалуйста, введите запрос.")
+        st.warning("⚠️ Пожалуйста, введите запрос.")
+
+# Дополнительный стиль для поля с выводом кода
+st.markdown("""
+<style>
+textarea {
+    font-family: "Courier New", Courier, monospace;
+    font-size: 14px;
+    background-color: #f4f7fa;
+    border: 1px solid #dcdcdc;
+    padding: 10px;
+    border-radius: 8px;
+}
+</style>
+""", unsafe_allow_html=True)
+
 
 
 
