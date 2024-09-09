@@ -5,6 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 import anthropic
 import os
 from dotenv import load_dotenv
+import re  # Для работы с регулярными выражениями
 
 load_dotenv()
 
@@ -68,12 +69,30 @@ def answer_question(question, retriever, client):
     
     return answer, documents
 
-# Настройка стиля ответа
+# Функция для форматирования ответа с кодом и текста
 def format_answer(answer):
+    # Регулярное выражение для поиска фрагментов кода
+    code_blocks = re.findall(r'```(.*?)```', answer, re.DOTALL)
+    
+    # Если есть код, обрабатываем его
+    if code_blocks:
+        for block in code_blocks:
+            # Определяем тип кода (например, bash или python)
+            if block.strip().startswith('bash'):
+                answer = answer.replace(f'```{block}```', f'<pre><code class="language-bash">{block}</code></pre>')
+            else:
+                answer = answer.replace(f'```{block}```', f'<pre><code class="language-python">{block}</code></pre>')
+    else:
+        # Если нет явных блоков, просто показываем текст
+        answer = f'<p>{answer}</p>'
+
+    # Оформляем ответ в рамку
     st.markdown(
-        f'<div style="background-color:#f0f2f6; padding: 20px; border-radius: 10px; border: 1px solid #dcdcdc;">'
-        f'<p style="font-size:16px;">{st.markdown(answer)}</p>'
-        f'</div>',
+        f'''
+        <div style="background-color:#f9f9f9; padding: 20px; border-radius: 10px; border: 2px solid #d3d3d3; word-wrap: break-word;">
+            {answer}
+        </div>
+        ''',
         unsafe_allow_html=True
     )
 
@@ -89,38 +108,34 @@ query = st.text_input("📝 Введите ваш запрос:", 'Что так
 # Кнопка для запуска поиска и генерации ответа
 if st.button("🚀 Поиск и генерация ответа"):
     if query:
-
         # Генерация ответа на вопрос
         answer, documents = answer_question(query, embedding_retriever, client)
 
         if answer:
             # Оформление ответа
             st.subheader("✉️ Ответ:")
-            
-            # Проверяем, есть ли фрагменты кода
-            if '```' in answer:
-                st.markdown(answer)
-            else:
-                format_answer(answer)
+
+            # Форматируем и выводим ответ
+            format_answer(answer)
 
         else:
             st.warning("⚠️ Не удалось получить ответ от модели.")
     else:
         st.warning("⚠️ Пожалуйста, введите запрос.")
 
-# Дополнительный стиль для поля с выводом кода
+# Дополнительный стиль для корректного отображения кода
 st.markdown("""
 <style>
-textarea {
-    font-family: "Courier New", Courier, monospace;
-    font-size: 14px;
-    background-color: #f4f7fa;
-    border: 1px solid #dcdcdc;
+pre {
+    background-color: #f5f5f5;
     padding: 10px;
     border-radius: 8px;
+    border: 1px solid #dcdcdc;
+    overflow-x: auto;
 }
 </style>
 """, unsafe_allow_html=True)
+
 
 
 
