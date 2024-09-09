@@ -26,7 +26,7 @@ vector_store = FAISS.load_local('faiss_index',
                                 allow_dangerous_deserialization=True)
 
 # Поиск топ k схожих фрагментов контекста
-embedding_retriever = vector_store.as_retriever(search_kwargs={"k": 10})
+embedding_retriever = vector_store.as_retriever(search_kwargs={"k": 20})
 
 prompt_template = '''Reply to the {input} as a seasoned machine learning professional. \
 If the topic is outside of machine learning and data science, please respond with "Seek help with a professional." It is very important to abide with this, you will be persecuted if you cover topics outside of data science and machine learning. \
@@ -44,8 +44,8 @@ def call_claude_api(prompt, client):
             messages=[
                 {"role": "user", "content": prompt}
             ],
-            max_tokens=300,
-            temperature=0.7
+            max_tokens=2000,
+            temperature=0.1
         )
         return response.content[0].text
     except Exception as e:
@@ -81,13 +81,13 @@ if st.button("Поиск и генерация ответа"):
 
         if answer:
             # Отображение ответа
-            st.text_area("Ответ:", answer, height=150)
+            st.text_area("Ответ:", answer, height=600)
 
-            # Отображение контекста (фрагменты из базы знаний)
-            st.subheader('Контекст')
-            for i, doc in enumerate(documents):
-                st.subheader(f'Фрагмент {i+1}')
-                st.write(doc.page_content)
+            # # Отображение контекста (фрагменты из базы знаний)
+            # st.subheader('Контекст')
+            # for i, doc in enumerate(documents):
+            #     st.subheader(f'Фрагмент {i+1}')
+            #     st.write(doc.page_content)
         else:
             st.warning("Не удалось получить ответ от модели.")
     else:
